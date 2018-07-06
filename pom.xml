@@ -53,6 +53,8 @@
                             org.apache.felix.configurator.impl.model                            
                         </Conditional-Package>
                     </instructions>
+                    <!--  Skip baselining for 0.x version -->
+                    <skip>true</skip>
                 </configuration>
             </plugin>
             <plugin>

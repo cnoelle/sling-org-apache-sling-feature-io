@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
@@ -112,6 +113,7 @@ public class ApplicationJSONReader extends JSONReaderBase {
             variables.put(entry.getKey(), entry.getValue());
         }
 
+        this.readFeatures(map, app.getFeatureIds());
         this.readBundles(map, app.getBundles(), app.getConfigurations());
         this.readFrameworkProperties(map, app.getFrameworkProperties());
         this.readConfigurations(map, app.getConfigurations());
@@ -119,6 +121,16 @@ public class ApplicationJSONReader extends JSONReaderBase {
         this.readExtensions(map,
                 JSONConstants.APP_KNOWN_PROPERTIES,
                 this.app.getExtensions(), this.app.getConfigurations());
+    }
+
+    private void readFeatures(Map<String, Object> map, List<ArtifactId> featureIds) {
+        Object fids = map.get(JSONConstants.APP_FEATURES);
+        if (fids instanceof List) {
+            for (Object fid : (List<?>) fids) {
+                ArtifactId aid = ArtifactId.parse(fid.toString());
+                featureIds.add(aid);
+            }
+        }
     }
 
     @Override

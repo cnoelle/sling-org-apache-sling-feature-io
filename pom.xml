@@ -50,7 +50,10 @@
                     <instructions>
                         <Conditional-Package>
                             org.apache.felix.configurator.impl.json,
-                            org.apache.felix.configurator.impl.model                            
+                            org.apache.felix.configurator.impl.model,
+                            org.apache.felix.utils.collections,
+                            org.apache.felix.utils.resource,
+                            org.apache.felix.utils.version
                         </Conditional-Package>
                     </instructions>
                     <!--  Skip baselining for 0.x version -->

@@ -2,6 +2,18 @@
     "#": "A key that starts with a hash is a comment",
     "id": "org.apache.sling:my.app:slingosgifeature:my-classifier:1.0",
 
+    "title": "A title for the feature. (optional)",
+    "description": "A description for the feature. (optional)",
+    "vendor": "The feature vendor, for example 'Apache Software Foundation'. (optional)",
+    "license": "The license of this feature file, for example 'ASL-2'. (optional)",
+    "location": "The location might be the location of the feature file or any other means identifying where the object is defined. (optional)",
+
+    "# A complete feature has no external dependencies": "(optional)",
+    "complete": true,
+
+    "# A final feature cannot be used as a prototype for another feature": "(optional)",
+    "final": false,
+
     "# variables": "used in configuration and framework properties are substituted at launch time.",
     "variables": {
         "cfgvar": "somedefault",

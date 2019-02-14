@@ -101,7 +101,7 @@ public class FeatureJSONReader extends JSONReaderBase {
         this.feature.setLicense(getProperty(map, JSONConstants.FEATURE_LICENSE));
 
         this.readVariables(map, feature.getVariables());
-        this.readBundles(map, feature.getBundles(), feature.getConfigurations());
+        this.readBundles(map, feature.getBundles(), feature.getConfigurations(), feature.getVariables());
         this.readFrameworkProperties(map, feature.getFrameworkProperties());
         this.readConfigurations(map, feature.getConfigurations());
 

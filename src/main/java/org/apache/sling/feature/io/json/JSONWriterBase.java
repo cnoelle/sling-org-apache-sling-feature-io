@@ -280,10 +280,10 @@ abstract class JSONWriterBase {
              && inc.getConfigurationRemovals().isEmpty()
              && inc.getFrameworkPropertiesRemovals().isEmpty() ) {
 
-            generator.write(JSONConstants.FEATURE_PROTOTYPE, inc.getId().toMvnId());
+            generator.write(JSONConstants.FEATURE_PROTOTYPE, (inc.getId() != null ? inc.getId().toMvnId() : inc.getUrl().toString()));
         } else {
             generator.writeStartObject(JSONConstants.FEATURE_PROTOTYPE);
-            writeProperty(generator, JSONConstants.ARTIFACT_ID, inc.getId().toMvnId());
+            writeProperty(generator, JSONConstants.ARTIFACT_ID, (inc.getId() != null ? inc.getId().toMvnId() : inc.getUrl().toString()));
 
             generator.writeStartObject(JSONConstants.PROTOTYPE_REMOVALS);
 

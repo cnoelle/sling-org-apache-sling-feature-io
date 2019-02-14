@@ -38,9 +38,12 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -187,13 +190,14 @@ abstract class JSONReaderBase {
     protected void readBundles(
             final Map<String, Object> map,
             final Bundles container,
-            final Configurations configContainer) throws IOException {
+            final Configurations configContainer,
+            final Map<String, String> variables) throws IOException {
         if ( map.containsKey(JSONConstants.FEATURE_BUNDLES)) {
             final Object bundlesObj = map.get(JSONConstants.FEATURE_BUNDLES);
             checkType(JSONConstants.FEATURE_BUNDLES, bundlesObj, List.class);
 
             final List<Artifact> list = new ArrayList<>();
-            readArtifacts(JSONConstants.FEATURE_BUNDLES, "bundle", list, bundlesObj, configContainer);
+            readArtifacts(JSONConstants.FEATURE_BUNDLES, "bundle", list, bundlesObj, configContainer, variables);
 
             for(final Artifact a : list) {
                 if ( container.containsExact(a.getId())) {
@@ -214,7 +218,8 @@ abstract class JSONReaderBase {
             final String artifactType,
             final List<Artifact> artifacts,
             final Object listObj,
-            final Configurations container)
+            final Configurations container,
+            final Map<String, String> variables)
     throws IOException {
         checkType(section, listObj, List.class);
         @SuppressWarnings("unchecked")
@@ -227,7 +232,8 @@ abstract class JSONReaderBase {
                 if ( entry.toString().startsWith("#") ) {
                     continue;
                 }
-                artifact = new Artifact(ArtifactId.parse((String) entry));
+                String entry2 = replace((String) entry, variables); // TODO replace vars
+                artifact = new Artifact(ArtifactId.parse(entry2));
             } else {
                 @SuppressWarnings("unchecked")
                 final Map<String, Object> bundleObj = (Map<String, Object>) entry;
@@ -235,7 +241,8 @@ abstract class JSONReaderBase {
                     throw new IOException(exceptionPrefix + " " + artifactType + " is missing required artifact id");
                 }
                 checkType(artifactType + " " + JSONConstants.ARTIFACT_ID, bundleObj.get(JSONConstants.ARTIFACT_ID), String.class);
-                final ArtifactId id = ArtifactId.parse(bundleObj.get(JSONConstants.ARTIFACT_ID).toString());
+                final String artId = replace(bundleObj.get(JSONConstants.ARTIFACT_ID).toString(), variables); // TODO replace variables
+                final ArtifactId id = ArtifactId.parse(artId);
 
                 artifact = new Artifact(id);
                 for(final Map.Entry<String, Object> metadataEntry : bundleObj.entrySet()) {
@@ -253,6 +260,13 @@ abstract class JSONReaderBase {
             }
             artifacts.add(artifact);
         }
+    }
+    
+    private static String replace(String in, final Map<String, String> variables) {
+        for (Map.Entry<String, String> keyValue : variables.entrySet()) {
+        	in = in.replace("${" + keyValue.getKey() + "}", keyValue.getValue());
+        }
+        return in;
     }
 
     protected void addConfigurations(final Map<String, Object> map,
@@ -375,7 +389,7 @@ abstract class JSONReaderBase {
             final Object value = map.get(key);
             switch ( extType ) {
                 case ARTIFACTS : final List<Artifact> list = new ArrayList<>();
-                                 readArtifacts("Extension " + name, "artifact", list, value, configContainer);
+                                 readArtifacts("Extension " + name, "artifact", list, value, configContainer, Collections.emptyMap());
                                  for(final Artifact a : list) {
                                      if ( ext.getArtifacts().contains(a) ) {
                                          throw new IOException(exceptionPrefix + "Duplicate artifact in extension " + name + " : " + a.getId().toMvnId());
@@ -498,12 +512,27 @@ abstract class JSONReaderBase {
             } else {
                 @SuppressWarnings("unchecked")
                 final Map<String, Object> obj = (Map<String, Object>) prototypeObj;
-                if ( !obj.containsKey(JSONConstants.ARTIFACT_ID) ) {
-                    throw new IOException(exceptionPrefix + " prototype is missing required artifact id");
+                if ( !obj.containsKey(JSONConstants.ARTIFACT_ID) && !obj.containsKey(JSONConstants.ARTIFACT_LOCATION)) {
+                    throw new IOException(exceptionPrefix + " prototype is missing required artifact id or url");
                 }
-                checkType("Prototype " + JSONConstants.ARTIFACT_ID, obj.get(JSONConstants.ARTIFACT_ID), String.class);
-                final ArtifactId id = ArtifactId.parse(obj.get(JSONConstants.ARTIFACT_ID).toString());
-                prototype = new Prototype(id);
+                final boolean isUrl = obj.containsKey(JSONConstants.ARTIFACT_LOCATION);
+                if (isUrl)
+            		checkType("Prototype " + JSONConstants.ARTIFACT_LOCATION, obj.get(JSONConstants.ARTIFACT_LOCATION), String.class);
+                else 
+                	checkType("Prototype " + JSONConstants.ARTIFACT_ID, obj.get(JSONConstants.ARTIFACT_ID), String.class);
+                
+                // if prototype contains location -> read from location
+                if (isUrl) {
+                	final String prototypeLocation = obj.get(JSONConstants.ARTIFACT_LOCATION).toString();
+                	try {
+               			 prototype = new Prototype(new URL(prototypeLocation));
+                	} catch (MalformedURLException e) {
+                		throw new IOException("Not a valid prototype location: " + prototypeLocation, e);
+                	}
+                } else {
+	                final ArtifactId id = ArtifactId.parse(obj.get(JSONConstants.ARTIFACT_ID).toString());
+	                prototype = new Prototype(id);
+                }
 
                 if ( obj.containsKey(JSONConstants.PROTOTYPE_REMOVALS) ) {
                     checkType("Prototype removals", obj.get(JSONConstants.PROTOTYPE_REMOVALS), Map.class);

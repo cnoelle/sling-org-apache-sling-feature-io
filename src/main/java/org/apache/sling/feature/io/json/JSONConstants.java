@@ -70,8 +70,11 @@ public abstract class JSONConstants {
             FEATURE_LICENSE);
 
     static final String ARTIFACT_ID = "id";
+    static final String ARTIFACT_LOCATION = "location";
+    
 
     static final List<String> ARTIFACT_KNOWN_PROPERTIES = Arrays.asList(ARTIFACT_ID,
+    		ARTIFACT_LOCATION,
             Configuration.PROP_ARTIFACT_ID,
             FEATURE_CONFIGURATIONS);
 
